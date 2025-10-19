@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Carta IA — Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #f6efe7;
+      --card: #f1e4d6;
+      --accent: #b08968;
+      --accent-2: #d1b59a;
+      --text: #463c33;
+      --muted: #8b7e73;
+      --white: #ffffff;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-1: 0 3px 10px rgba(70,60,51,0.08);
+      --shadow-2: 0 6px 18px rgba(70,60,51,0.1);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;overflow:hidden;}
+    body{display:flex;flex-direction:column;height:100dvh;}
+    .app{display:flex;flex-direction:column;height:100%;width:100%;padding:8px;}
+    .header{background:var(--card);border-radius:var(--radius-lg);padding:10px 14px;box-shadow:var(--shadow-1);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+    .header-left{display:flex;align-items:center;gap:10px;}
+    .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:inset 0 2px 5px rgba(255,255,255,0.3);}
+    .title h1{font-size:17px;margin:0;font-weight:600;}
+    .title p{margin:2px 0 0 0;color:var(--muted);font-size:13px;}
+    .signature{font-family:'Playfair Display',serif;font-size:14px;color:var(--accent);opacity:0.8;letter-spacing:0.5px;}
+    .chat{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-2);padding:12px;display:flex;flex-direction:column;flex:1;margin-top:8px;overflow:hidden;}
+    .messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;padding-bottom:8px;}
+    .bubble{max-width:85%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-wrap:break-word;box-shadow:0 1px 5px rgba(0,0,0,0.05);}
+    .from-user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-bottom-right-radius:6px;}
+    .from-bot{align-self:flex-start;background:var(--card);color:var(--text);border-bottom-left-radius:6px;}
+    .typing{display:inline-flex;gap:4px;align-items:center;color:var(--muted);font-size:13px;}
+    .dot{width:5px;height:5px;border-radius:50%;background:var(--muted);opacity:.4;animation:blink 1.4s infinite;}
+    .dot:nth-child(2){animation-delay:.2s;}
+    .dot:nth-child(3){animation-delay:.4s;}
+    @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:.8}}
+    .input-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-md);margin-top:8px;flex-shrink:0;}
+    .prompt{flex:1;border:none;outline:none;background:#fff;padding:10px 12px;border-radius:10px;font-size:14px;color:var(--text);}
+    .send{border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:600;padding:10px 14px;border-radius:10px;box-shadow:0 3px 8px rgba(176,137,104,0.3);}
+    @media(max-width:600px){.title h1{font-size:16px;}.prompt{font-size:13px;}.send{padding:9px 12px;}.signature{font-size:12px;}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo"></div>
+        <div class="title">
+          <h1>Asistente de [RESTAURANTE]</h1>
+          <p>Pregunta lo que quieras sobre nuestra carta</p>
+        </div>
+      </div>
+      <div class="signature">Made by [FRANKLE]</div>
+    </header>
+    <main class="chat">
+      <div id="messages" class="messages">
+        <div class="bubble from-bot">¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.</div>
+      </div>
+      <div class="input-row">
+        <input id="prompt" class="prompt" type="text" placeholder="Escribe tu mensaje..." autocomplete="off" />
+        <button id="send" class="send">Enviar</button>
+      </div>
+    </main>
+  </div>
+  <script>
+    const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('prompt');
+    const sendBtn = document.getElementById('send');
+    const sessionId = (() => {
+      const key = 'carta_ai_session';
+      let v = localStorage.getItem(key);
+      if(!v){v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();localStorage.setItem(key,v);}
+      return v;
+    })();
+    const history = [];
+    function scrollToEnd(){messagesEl.scrollTop = messagesEl.scrollHeight + 100;}
+    function addBubble(text,from='bot'){const div=document.createElement('div');div.className=`bubble ${from==='user'?'from-user':'from-bot'}`;div.innerText=text;messagesEl.appendChild(div);scrollToEnd();return div;}
+    function addTyping(){const holder=document.createElement('div');holder.className='bubble from-bot';const wrap=document.createElement('div');wrap.className='typing';wrap.innerHTML=`<span>Escribiendo</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>`;holder.appendChild(wrap);messagesEl.appendChild(holder);scrollToEnd();return holder;}
+    function setLoading(isLoading){sendBtn.disabled=isLoading;inputEl.disabled=isLoading;}
+    async function sendMessage(){const text=(inputEl.value||"").trim();if(!text)return;addBubble(text,'user');inputEl.value='';const typingEl=addTyping();setLoading(true);history.push({role:'user',content:text});try{const payload={message:text,sessionId,history,source:'carta-frontend-mobile'};const res=await fetch(WEBHOOK_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok)throw new Error(`HTTP ${res.status}`);let replyText='';const contentType=res.headers.get('content-type')||'';if(contentType.includes('application/json')){const data=await res.json();replyText=(data&&(data.reply||data.data||data.text))||JSON.stringify(data);}else replyText=await res.text();history.push({role:'assistant',content:replyText});typingEl.remove();addBubble(replyText,'bot');}catch(err){console.error(err);typingEl.remove();addBubble("Error de conexión con el servidor.",'bot');}finally{setLoading(false);inputEl.focus();}}
+    sendBtn.addEventListener('click',sendMessage);
+    inputEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+    (function welcome(){const params=new URLSearchParams(location.search);const mesa=params.get('mesa');if(mesa){addBubble(`Estás en la mesa ${mesa}. ¿Algo sin gluten o vegetariano?`,'bot');}})();
+  </script>
+</body>
+</html>
