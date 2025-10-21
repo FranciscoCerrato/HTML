@@ -192,4 +192,118 @@
       color: #fff;
       font-weight: 600;
       padding: 10px 16px;
-      border-radius: 5
+      border-radius: 50px;
+      box-shadow: 0 3px 8px rgba(61,220,151,0.3);
+      font-size: 14px;
+      transition: transform 0.15s ease;
+    }
+
+    .send:active {
+      transform: scale(0.96);
+    }
+
+    @media(max-width:600px){
+      .title h1{font-size:16px;}
+      .prompt{font-size:15px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">🍽️</div>
+        <div class="title">
+          <h1>[TU RESTAURANTE]</h1>
+          <p>Pregunta lo que quieras sobre nuestra carta</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="chat">
+      <div id="messages" class="messages">
+        <div class="bubble from-bot">
+          ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
+        </div>
+      </div>
+    </main>
+
+    <div class="input-container" id="inputContainer">
+      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
+      <button id="send" class="send" type="button">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("send");
+    const inputContainer = document.getElementById("inputContainer");
+
+    const sessionId = (() => {
+      const key = "carta_ai_session";
+      let v = localStorage.getItem(key);
+      if (!v) {
+        v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+        localStorage.setItem(key, v);
+      }
+      return v;
+    })();
+
+    const history = [];
+
+    function scrollToEnd() {
+      messagesEl.scrollTop = messagesEl.scrollHeight + 100;
+    }
+
+    function addBubble(text, from = "bot") {
+      const div = document.createElement("div");
+      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
+      div.innerText = text;
+      messagesEl.appendChild(div);
+      scrollToEnd();
+      return div;
+    }
+
+    async function sendMessage() {
+      const text = (inputEl.value || "").trim();
+      if (!text) return;
+      addBubble(text, "user");
+      inputEl.value = "";
+      const typingEl = addBubble("Escribiendo...", "bot");
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, sessionId, history, source: "carta-frontend" })
+        });
+        const data = await res.json();
+        typingEl.remove();
+        addBubble(data.reply || "Sin respuesta.", "bot");
+      } catch {
+        typingEl.remove();
+        addBubble("Error de conexión con el servidor.", "bot");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    if (window.visualViewport) {
+      const adjustFloating = () => {
+        const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        inputContainer.style.transform = `translate(-50%, -${offset}px)`;
+      };
+      window.visualViewport.addEventListener("resize", adjustFloating);
+      window.visualViewport.addEventListener("scroll", adjustFloating);
+      adjustFloating();
+    }
+  </script>
+</body>
+</html>
