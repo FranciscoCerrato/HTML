@@ -324,7 +324,14 @@
       }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
+    // ✅ soporte para clic y táctil en móviles
+    ['click','touchstart'].forEach(evt =>
+      sendBtn.addEventListener(evt, e => {
+        e.preventDefault();
+        sendMessage();
+      })
+    );
+
     inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
