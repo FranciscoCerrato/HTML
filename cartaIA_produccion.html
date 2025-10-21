@@ -70,14 +70,6 @@
     .title h1 { font-size: 17px; margin: 0; font-weight: 600; }
     .title p { margin: 2px 0 0 0; color: var(--muted); font-size: 13px; }
 
-    .signature {
-      font-family: 'Playfair Display', serif;
-      font-size: 14px;
-      color: #666;
-      opacity: 0.9;
-      letter-spacing: 0.5px;
-    }
-
     .chat {
       position: relative;
       background: var(--white);
@@ -100,6 +92,21 @@
       background: url('https://raw.githubusercontent.com/FranciscoCerrato/HTML/main/ChatGPT%20Image%2021%20oct%202025%2C%2020_49_39.png') center center no-repeat;
       background-size: contain;
       opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ✅ Texto “Made by Fran” */
+    .chat::after {
+      content: "Made by Fran";
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #444;
+      opacity: 0.7;
+      font-weight: 500;
       pointer-events: none;
       z-index: 0;
     }
@@ -145,10 +152,9 @@
       border-bottom-left-radius: 6px;
     }
 
-    /* ✅ Burbuja flotante más elevada */
     .input-container {
       position: fixed;
-      bottom: 40px; /* ↑ separamos del borde inferior */
+      bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -186,74 +192,4 @@
       color: #fff;
       font-weight: 600;
       padding: 10px 16px;
-      border-radius: 50px;
-      box-shadow: 0 3px 8px rgba(61,220,151,0.3);
-      font-size: 14px;
-      transition: transform 0.15s ease;
-    }
-
-    .send:active {
-      transform: scale(0.96);
-    }
-
-    @media(max-width:600px){
-      .title h1{font-size:16px;}
-      .prompt{font-size:15px;}
-      .signature{font-size:12px;}
-    }
-  </style>
-</head>
-<body>
-  <div class="app" id="app">
-    <header class="header">
-      <div class="header-left">
-        <div class="logo">🍽️</div>
-        <div class="title">
-          <h1>[TU RESTAURANTE]</h1>
-          <p>Pregunta lo que quieras sobre nuestra carta</p>
-        </div>
-      </div>
-      <div class="signature">[Mi logo]</div>
-    </header>
-
-    <main class="chat">
-      <div id="messages" class="messages">
-        <div class="bubble from-bot">
-          ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
-        </div>
-      </div>
-    </main>
-
-    <!-- ✅ Burbuja flotante -->
-    <div class="input-container" id="inputContainer">
-      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
-      <button id="send" class="send" type="button">Enviar</button>
-    </div>
-  </div>
-
-  <script>
-    const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
-    const messagesEl = document.getElementById("messages");
-    const inputEl = document.getElementById("prompt");
-    const sendBtn = document.getElementById("send");
-    const inputContainer = document.getElementById("inputContainer");
-
-    const sessionId = (() => {
-      const key = "carta_ai_session";
-      let v = localStorage.getItem(key);
-      if (!v) {
-        v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
-        localStorage.setItem(key, v);
-      }
-      return v;
-    })();
-
-    const history = [];
-
-    function scrollToEnd() {
-      messagesEl.scrollTop = messagesEl.scrollHeight + 100;
-    }
-
-    function addBubble(text, from = "bot") {
-      const div = document.createElement("div");
-      div.className = `bubble ${from === "user" ? "from-user" :
+      border-radius: 5
