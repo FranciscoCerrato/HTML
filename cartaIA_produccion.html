@@ -46,9 +46,10 @@
     .app {
       display: flex;
       flex-direction: column;
-      height: 100dvh; /* ✅ usa altura real del viewport móvil */
+      height: 100dvh; /* ✅ Usa viewport real móvil */
       width: 100%;
       padding: 8px;
+      transition: height 0.2s ease;
     }
 
     .header {
@@ -65,7 +66,7 @@
 
     .header-left { display: flex; align-items: center; gap: 10px; }
 
-    /* 🍽️ logo emoji */
+    /* 🍽️ emoji logo */
     .logo {
       font-size: 26px;
       width: 40px;
@@ -80,7 +81,7 @@
     .title h1 { font-size: 17px; margin: 0; font-weight: 600; }
     .title p { margin: 2px 0 0 0; color: var(--muted); font-size: 13px; }
 
-    /* 🖤 firma gris */
+    /* 🖤 Firma gris */
     .signature {
       font-family: 'Playfair Display', serif;
       font-size: 14px;
@@ -276,7 +277,9 @@
 
     const history = [];
 
-    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
+    function scrollToEnd() {
+      messagesEl.scrollTop = messagesEl.scrollHeight + 100;
+    }
 
     function addBubble(text, from = 'bot', instant = false) {
       const div = document.createElement('div');
@@ -344,16 +347,16 @@
       }
     });
 
-    // ✅ FIX: evita el salto de pantalla al abrir teclado móvil
-    window.addEventListener('resize', () => {
-      document.querySelector('.app').style.height = window.innerHeight + 'px';
-    });
-
-    (function welcome() {
-      const params = new URLSearchParams(location.search);
-      const mesa = params.get('mesa');
-      if (mesa) addBubble(`Estás en la mesa ${mesa}. ¿Algo sin gluten o vegetariano?`, 'bot');
-    })();
+    // ✅ FIX DEFINITIVO: teclado móvil sin salto de pantalla
+    if (window.visualViewport) {
+      const fixKeyboard = () => {
+        appEl.style.height = `${window.visualViewport.height}px`;
+        scrollToEnd();
+      };
+      window.visualViewport.addEventListener('resize', fixKeyboard);
+      window.visualViewport.addEventListener('scroll', fixKeyboard);
+      fixKeyboard();
+    }
   </script>
 </body>
 </html>
