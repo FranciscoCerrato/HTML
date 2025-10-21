@@ -195,3 +195,202 @@
       align-items: center;
       gap: 10px;
       z-index: 50;
+      transition: transform 0.2s ease;
+    }
+
+    .prompt {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .send {
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(61,220,151,0.3);
+      font-size: 14px;
+      transition: transform 0.15s ease;
+    }
+
+    .send:active { transform: scale(0.96); }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">🍽️</div>
+        <div class="title">
+          <h1>[TU RESTAURANTE]</h1>
+          <p>Pregunta lo que quieras sobre nuestra carta</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="chat" id="chat">
+      <div id="messages" class="messages">
+        <!-- 🔽 Botón que despliega la carta -->
+        <button class="menu-btn" onclick="toggleMenu()">📜 Ver carta</button>
+        <div id="menuText" class="menu-text">
+🍢 Entrantes
+
+Pan con alioli y aceitunas ............. 2,50 €
+
+Ensalada mixta (lechuga, tomate, cebolla, atún, huevo) ............. 6,00 €
+
+Ensalada de queso de cabra con miel y frutos secos ............. 8,50 €
+
+Gazpacho andaluz ............. 4,00 €
+
+Croquetas caseras de jamón ibérico (6 uds.) ............. 7,50 €
+
+🐟 Pescaito Frito
+
+Boquerones fritos ............. 8,00 €
+
+Calamares a la romana ............. 9,00 €
+
+Puntillitas ............. 9,50 €
+
+Choco frito ............. 10,00 €
+
+Fritura malagueña (para 2 personas) ............. 18,00 €
+
+🍤 A la Brasa
+
+Sardinas en espeto (por ración) ............. 7,00 €
+
+Pulpo a la brasa con pimentón ............. 13,50 €
+
+Dorada o lubina a la espalda ............. 14,00 €
+
+Brocheta de gambones ............. 12,00 €
+
+🍛 Arroces
+
+Paella mixta ............. 13,00 € / persona (mín. 2 personas)
+
+Arroz negro con alioli ............. 14,00 € / persona
+
+Fideuá marinera ............. 12,50 € / persona
+
+🍔 Carnes y Bocadillos
+
+Hamburguesa casera con patatas ............. 9,00 €
+
+Pechuga a la plancha con ensalada ............. 8,50 €
+
+Bocadillo de lomo con queso ............. 6,50 €
+
+Serranito andaluz ............. 7,00 €
+
+🍰 Postres
+
+Tarta de queso con mermelada de arándanos ............. 4,50 €
+
+Helados variados ............. 3,00 €
+
+Fruta fresca de temporada ............. 3,50 €
+
+🍹 Bebidas
+
+Agua mineral ............. 1,50 €
+
+Refrescos ............. 2,00 €
+
+Cerveza caña ............. 2,50 €
+
+Tinto de verano ............. 3,00 €
+
+Copa de vino blanco / rosado ............. 3,50 €
+
+Mojito / Piña colada ............. 7,00 €
+        </div>
+      </div>
+      <div class="madeby">Made by Fran</div>
+    </main>
+
+    <div class="input-container" id="inputContainer">
+      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
+      <button id="send" class="send" type="button">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('menuText');
+      menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+    }
+
+    const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("send");
+
+    const sessionId = (() => {
+      const key = "carta_ai_session";
+      let v = localStorage.getItem(key);
+      if (!v) {
+        v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+        localStorage.setItem(key, v);
+      }
+      return v;
+    })();
+
+    const history = [];
+    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
+
+    function addBubble(text, from = "bot") {
+      const div = document.createElement("div");
+      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
+      div.innerText = text;
+      messagesEl.appendChild(div);
+      scrollToEnd();
+      return div;
+    }
+
+    async function sendMessage() {
+      const text = (inputEl.value || "").trim();
+      if (!text) return;
+      addBubble(text, "user");
+      inputEl.value = "";
+      const typingEl = addBubble("Escribiendo...", "bot");
+
+      try {
+        const payload = { message: text, sessionId, history, source: "carta-frontend" };
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
+          body: JSON.stringify(payload)
+        });
+
+        const rawText = await res.text();
+        let replyText = rawText;
+        try { const data = JSON.parse(rawText); replyText = data.reply || data.text || data.data || JSON.stringify(data); } catch {}
+        typingEl.remove();
+        addBubble(replyText || "Sin respuesta del servidor.", "bot");
+      } catch (err) {
+        typingEl.remove();
+        addBubble("Error de conexión con el servidor.", "bot");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+  </script>
+</body>
+</html>
