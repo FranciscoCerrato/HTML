@@ -232,7 +232,7 @@
     </div>
   </div>
 
-  <!-- 🧠 Script: ahora acepta cualquier tipo de respuesta (texto o JSON) -->
+  <!-- Script con CORS explícito y lectura robusta del cuerpo -->
   <script>
     const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
     const messagesEl = document.getElementById("messages");
@@ -274,19 +274,26 @@
         const payload = { message: text, sessionId, history, source: "carta-frontend" };
         const res = await fetch(WEBHOOK_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          mode: "cors",                           // ← ¡Crucial para que el navegador acepte la respuesta!
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
           body: JSON.stringify(payload)
         });
 
-        // Siempre intentamos leer texto plano primero
-        let rawText = await res.text();
-        let replyText = rawText;
+        // Si la respuesta no es OK (4xx/5xx), mostramos el status
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          typingEl.remove();
+          addBubble(`Error ${res.status}: ${errText || "No se pudo obtener respuesta"}`, "bot");
+          return;
+        }
 
-        // Si parece un JSON válido, lo interpretamos
+        // Leemos texto SIEMPRE (funciona con texto plano o JSON)
+        const rawText = await res.text();
+        let replyText = rawText;
         try {
           const data = JSON.parse(rawText);
           replyText = data.reply || data.text || data.data || JSON.stringify(data);
-        } catch {}
+        } catch { /* no es JSON, usamos texto tal cual */ }
 
         typingEl.remove();
         addBubble(replyText || "Sin respuesta del servidor.", "bot");
