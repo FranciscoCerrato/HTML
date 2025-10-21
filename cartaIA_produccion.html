@@ -232,6 +232,7 @@
     </div>
   </div>
 
+  <!-- ✅ Script actualizado: compatible con JSON y texto plano -->
   <script>
     const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
     const messagesEl = document.getElementById("messages");
@@ -251,7 +252,9 @@
 
     const history = [];
 
-    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
+    function scrollToEnd() {
+      messagesEl.scrollTop = messagesEl.scrollHeight + 100;
+    }
 
     function addBubble(text, from = "bot") {
       const div = document.createElement("div");
@@ -268,6 +271,7 @@
       addBubble(text, "user");
       inputEl.value = "";
       const typingEl = addBubble("Escribiendo...", "bot");
+
       try {
         const payload = { message: text, sessionId, history, source: "carta-frontend" };
         const res = await fetch(WEBHOOK_URL, {
@@ -277,19 +281,18 @@
         });
 
         let replyText = "";
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
+
+        try {
           const data = await res.json();
-          replyText = (data && (data.reply || data.data || data.text)) || JSON.stringify(data);
-        } else {
+          replyText = data.reply || data.text || data.data || JSON.stringify(data);
+        } catch {
           replyText = await res.text();
         }
 
-        history.push({ role: "assistant", content: replyText });
         typingEl.remove();
-        addBubble(replyText, "bot");
+        addBubble(replyText || "Sin respuesta del servidor.", "bot");
       } catch (err) {
-        console.error(err);
+        console.error("Error al conectar:", err);
         typingEl.remove();
         addBubble("Error de conexión con el servidor.", "bot");
       }
