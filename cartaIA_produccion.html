@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Carta IA — Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
   <style>
@@ -34,20 +34,18 @@
       overflow: hidden;
     }
 
-    body.active-user {
-      background: linear-gradient(180deg, #f5fffb 0%, #e9fff6 100%);
-    }
-    body.active-bot {
-      background: linear-gradient(180deg, #ffffff 0%, #f3fffb 100%);
-    }
-
     .app {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100dvh;
       width: 100%;
       padding: 8px;
-      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
     }
 
     .header {
@@ -58,6 +56,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       flex-shrink: 0;
     }
 
@@ -78,17 +77,8 @@
       border-radius: 12px;
     }
 
-    .title h1 {
-      font-size: 17px;
-      margin: 0;
-      font-weight: 600;
-    }
-
-    .title p {
-      margin: 2px 0 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
+    .title h1 { font-size: 17px; margin: 0; font-weight: 600; }
+    .title p { margin: 2px 0 0 0; color: var(--muted); font-size: 13px; }
 
     .signature {
       font-family: 'Playfair Display', serif;
@@ -114,11 +104,9 @@
     .chat::before {
       content: "";
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 230px;
-      height: 230px;
+      width: 230px; height: 230px;
       background: url('https://raw.githubusercontent.com/FranciscoCerrato/HTML/main/ChatGPT%20Image%2021%20oct%202025%2C%2020_49_39.png') center center no-repeat;
       background-size: contain;
       opacity: 0.08;
@@ -134,6 +122,7 @@
       gap: 8px;
       scroll-behavior: smooth;
       padding-bottom: 8px;
+      position: relative;
       z-index: 1;
     }
 
@@ -150,12 +139,7 @@
       animation: fadeIn 0.3s ease forwards;
     }
 
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
 
     .from-user {
       align-self: flex-end;
@@ -179,10 +163,11 @@
       background: var(--card);
       border-radius: var(--radius-md);
       margin-top: 8px;
-      position: sticky;
+      position: fixed;
       bottom: 0;
-      flex-shrink: 0;
-      z-index: 2;
+      left: 0;
+      right: 0;
+      z-index: 10;
     }
 
     .prompt {
@@ -207,16 +192,10 @@
       box-shadow: 0 3px 8px rgba(61,220,151,0.3);
     }
 
-    @media (max-width: 600px) {
-      .title h1 {
-        font-size: 16px;
-      }
-      .prompt {
-        font-size: 16px;
-      }
-      .signature {
-        font-size: 12px;
-      }
+    @media(max-width:600px){
+      .title h1{font-size:16px;}
+      .prompt{font-size:16px;}
+      .signature{font-size:12px;}
     }
   </style>
 </head>
@@ -235,25 +214,25 @@
 
     <main class="chat">
       <div id="messages" class="messages">
-        <div class="bubble from-bot">
-          ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
-        </div>
-      </div>
-      <div class="input-row">
-        <input id="prompt" class="prompt" type="text" placeholder="Escribe tu mensaje..." autocomplete="off" />
-        <button id="send" class="send">Enviar</button>
+        <div class="bubble from-bot">¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.</div>
       </div>
     </main>
+
+    <div class="input-row" id="inputRow">
+      <input id="prompt" class="prompt" type="text" placeholder="Escribe tu mensaje..." autocomplete="off" />
+      <button id="send" class="send" type="button">Enviar</button>
+    </div>
   </div>
 
   <script>
     const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
-    const messagesEl = document.getElementById("messages");
-    const inputEl = document.getElementById("prompt");
-    const sendBtn = document.getElementById("send");
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('prompt');
+    const sendBtn = document.getElementById('send');
+    const inputRow = document.getElementById('inputRow');
 
     const sessionId = (() => {
-      const key = "carta_ai_session";
+      const key = 'carta_ai_session';
       let v = localStorage.getItem(key);
       if (!v) {
         v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
@@ -268,9 +247,9 @@
       messagesEl.scrollTop = messagesEl.scrollHeight + 100;
     }
 
-    function addBubble(text, from = "bot", instant = false) {
-      const div = document.createElement("div");
-      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
+    function addBubble(text, from = 'bot', instant = false) {
+      const div = document.createElement('div');
+      div.className = `bubble ${from === 'user' ? 'from-user' : 'from-bot'}`;
       div.innerText = text;
       messagesEl.appendChild(div);
       scrollToEnd();
@@ -280,14 +259,14 @@
     async function sendMessage() {
       const text = (inputEl.value || "").trim();
       if (!text) return;
-      addBubble(text, "user");
-      inputEl.value = "";
-      const typingEl = addBubble("Escribiendo...", "bot");
+      addBubble(text, 'user');
+      inputEl.value = '';
+      const typingEl = addBubble('Escribiendo...', 'bot');
       try {
         const res = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, sessionId, history, source: "carta-frontend" }),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId, history, source: 'carta-frontend' })
         });
         const data = await res.json();
         typingEl.remove();
@@ -298,13 +277,24 @@
       }
     }
 
-    sendBtn.addEventListener("click", sendMessage);
-    inputEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
+
+    // ✅ Mantiene el input fijo sobre el teclado sin mover pantalla
+    if (window.visualViewport) {
+      const adjustForKeyboard = () => {
+        const bottomOffset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        inputRow.style.bottom = `${bottomOffset}px`;
+      };
+      window.visualViewport.addEventListener('resize', adjustForKeyboard);
+      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+      adjustForKeyboard();
+    }
   </script>
 </body>
 </html>
