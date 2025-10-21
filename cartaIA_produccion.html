@@ -32,12 +32,21 @@
       color: var(--text);
       font-family: 'Poppins', sans-serif;
       overflow: hidden;
+      transition: background 0.6s ease;
+    }
+
+    body.active-user {
+      background: linear-gradient(180deg, #f5fffb 0%, #e9fff6 100%);
+    }
+
+    body.active-bot {
+      background: linear-gradient(180deg, #ffffff 0%, #f3fffb 100%);
     }
 
     .app {
       display: flex;
       flex-direction: column;
-      height: 100dvh;
+      height: 100dvh; /* ✅ usa altura real del viewport móvil */
       width: 100%;
       padding: 8px;
     }
@@ -56,20 +65,22 @@
 
     .header-left { display: flex; align-items: center; gap: 10px; }
 
+    /* 🍽️ logo emoji */
     .logo {
-      font-size: 28px;
+      font-size: 26px;
       width: 40px;
       height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px;
       background: #fff;
+      border-radius: 12px;
     }
 
     .title h1 { font-size: 17px; margin: 0; font-weight: 600; }
     .title p { margin: 2px 0 0 0; color: var(--muted); font-size: 13px; }
 
+    /* 🖤 firma gris */
     .signature {
       font-family: 'Playfair Display', serif;
       font-size: 14px;
@@ -79,6 +90,7 @@
     }
 
     .chat {
+      position: relative;
       background: var(--white);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-2);
@@ -90,6 +102,22 @@
       overflow: hidden;
     }
 
+    /* ✅ Marca de agua centrada */
+    .chat::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 230px;
+      height: 230px;
+      background: url('https://raw.githubusercontent.com/FranciscoCerrato/HTML/main/ChatGPT%20Image%2021%20oct%202025%2C%2020_49_39.png') center center no-repeat;
+      background-size: contain;
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -98,6 +126,8 @@
       gap: 8px;
       scroll-behavior: smooth;
       padding-bottom: 8px;
+      position: relative;
+      z-index: 1;
     }
 
     .bubble {
@@ -167,6 +197,7 @@
       flex-shrink: 0;
       position: sticky;
       bottom: 0;
+      z-index: 1;
     }
 
     .prompt {
@@ -231,6 +262,7 @@
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('prompt');
     const sendBtn = document.getElementById('send');
+    const appEl = document.getElementById('app');
 
     const sessionId = (() => {
       const key = 'carta_ai_session';
@@ -246,36 +278,56 @@
 
     function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
 
-    function addBubble(text, from = 'bot') {
+    function addBubble(text, from = 'bot', instant = false) {
       const div = document.createElement('div');
       div.className = `bubble ${from === 'user' ? 'from-user' : 'from-bot'}`;
-      div.textContent = text;
       messagesEl.appendChild(div);
       scrollToEnd();
+      if (from === 'bot' && !instant) typeText(div, text);
+      else div.innerText = text;
       return div;
+    }
+
+    function typeText(element, text, delay = 25) {
+      let i = 0;
+      const interval = setInterval(() => {
+        element.textContent = text.slice(0, i++);
+        scrollToEnd();
+        if (i > text.length) clearInterval(interval);
+      }, delay);
     }
 
     async function sendMessage() {
       const text = (inputEl.value || "").trim();
       if (!text) return;
+      document.body.classList.remove('active-bot');
+      document.body.classList.add('active-user');
       addBubble(text, 'user');
       inputEl.value = '';
-      const typingEl = addBubble("Escribiendo...", 'bot');
+      const typingEl = addBubble("Escribiendo...", 'bot', true);
       try {
-        const payload = { message: text, sessionId, history, source: 'carta-frontend' };
+        const payload = { message: text, sessionId, history, source: 'carta-frontend-mobile' };
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        let replyText = '';
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          replyText = (data && (data.reply || data.data || data.text)) || JSON.stringify(data);
+        } else replyText = await res.text();
+        history.push({ role: 'assistant', content: replyText });
         typingEl.remove();
-        addBubble(data.reply || data.text || "Sin respuesta", 'bot');
+        document.body.classList.remove('active-user');
+        document.body.classList.add('active-bot');
+        addBubble(replyText, 'bot');
       } catch (err) {
         console.error(err);
         typingEl.remove();
         addBubble("Error de conexión con el servidor.", 'bot');
-      }
+      } finally { inputEl.focus(); }
     }
 
     ['click','touchstart'].forEach(evt =>
@@ -294,8 +346,14 @@
 
     // ✅ FIX: evita el salto de pantalla al abrir teclado móvil
     window.addEventListener('resize', () => {
-      document.querySelector('.chat').style.height = window.innerHeight + 'px';
+      document.querySelector('.app').style.height = window.innerHeight + 'px';
     });
+
+    (function welcome() {
+      const params = new URLSearchParams(location.search);
+      const mesa = params.get('mesa');
+      if (mesa) addBubble(`Estás en la mesa ${mesa}. ¿Algo sin gluten o vegetariano?`, 'bot');
+    })();
   </script>
 </body>
 </html>
