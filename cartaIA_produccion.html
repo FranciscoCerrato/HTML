@@ -269,15 +269,27 @@
       inputEl.value = "";
       const typingEl = addBubble("Escribiendo...", "bot");
       try {
+        const payload = { message: text, sessionId, history, source: "carta-frontend" };
         const res = await fetch(WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, sessionId, history, source: "carta-frontend" })
+          body: JSON.stringify(payload)
         });
-        const data = await res.json();
+
+        let replyText = "";
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          replyText = (data && (data.reply || data.data || data.text)) || JSON.stringify(data);
+        } else {
+          replyText = await res.text();
+        }
+
+        history.push({ role: "assistant", content: replyText });
         typingEl.remove();
-        addBubble(data.reply || "Sin respuesta.", "bot");
-      } catch {
+        addBubble(replyText, "bot");
+      } catch (err) {
+        console.error(err);
         typingEl.remove();
         addBubble("Error de conexión con el servidor.", "bot");
       }
