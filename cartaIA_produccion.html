@@ -46,10 +46,10 @@
     .app {
       display: flex;
       flex-direction: column;
-      height: 100vh; /* Ajuste dinámico más estable en móviles */
-      height: 100dvh;
+      height: 100vh;
       width: 100%;
       padding: 8px;
+      transition: height 0.2s ease;
     }
 
     .header {
@@ -210,7 +210,7 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="app" id="app">
     <header class="header">
       <div class="header-left">
         <div class="logo"></div>
@@ -238,6 +238,7 @@
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('prompt');
     const sendBtn = document.getElementById('send');
+    const appEl = document.getElementById('app');
 
     const sessionId = (() => {
       const key = 'carta_ai_session';
@@ -321,11 +322,17 @@
       }
     });
 
-    // 👇 Ajuste para teclado móvil
-    window.addEventListener('resize', () => {
-      document.body.scrollIntoView(false);
-      scrollToEnd();
-    });
+    // 💡 FIX definitivo: ajustar viewport dinámico en móviles
+    if (window.visualViewport) {
+      const adjustAppHeight = () => {
+        const vh = window.visualViewport.height;
+        appEl.style.height = vh + 'px';
+        scrollToEnd();
+      };
+      window.visualViewport.addEventListener('resize', adjustAppHeight);
+      window.visualViewport.addEventListener('scroll', adjustAppHeight);
+      adjustAppHeight();
+    }
 
     (function welcome() {
       const params = new URLSearchParams(location.search);
