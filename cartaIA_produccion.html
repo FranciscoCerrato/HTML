@@ -96,19 +96,19 @@
       z-index: 0;
     }
 
-    /* ✅ Texto “Made by Fran” */
-    .chat::after {
-      content: "Made by Fran";
+    /* ✅ Texto “Made by Fran” visible */
+    .madeby {
       position: absolute;
-      bottom: 60px;
+      bottom: 85px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 12px;
       color: #444;
       opacity: 0.7;
       font-weight: 500;
+      text-align: center;
+      z-index: 1;
       pointer-events: none;
-      z-index: 0;
     }
 
     .messages {
@@ -120,7 +120,7 @@
       scroll-behavior: smooth;
       padding-bottom: 8px;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .bubble {
@@ -198,9 +198,7 @@
       transition: transform 0.15s ease;
     }
 
-    .send:active {
-      transform: scale(0.96);
-    }
+    .send:active { transform: scale(0.96); }
 
     @media(max-width:600px){
       .title h1{font-size:16px;}
@@ -226,6 +224,8 @@
           ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
         </div>
       </div>
+      <!-- ✅ Texto visible en la parte inferior del chat -->
+      <div class="madeby">Made by Fran</div>
     </main>
 
     <div class="input-container" id="inputContainer">
@@ -253,9 +253,7 @@
 
     const history = [];
 
-    function scrollToEnd() {
-      messagesEl.scrollTop = messagesEl.scrollHeight + 100;
-    }
+    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
 
     function addBubble(text, from = "bot") {
       const div = document.createElement("div");
