@@ -145,19 +145,19 @@
       border-bottom-left-radius: 6px;
     }
 
-    /* ✅ Burbujas flotantes fijas */
+    /* ✅ Burbuja flotante más elevada */
     .input-container {
       position: fixed;
-      bottom: 20px;
+      bottom: 40px; /* ↑ separamos del borde inferior */
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       align-items: center;
       gap: 10px;
       background: var(--white);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.15);
       border-radius: 50px;
-      padding: 8px 10px;
+      padding: 10px 12px;
       width: 92%;
       max-width: 480px;
       z-index: 20;
@@ -224,7 +224,7 @@
       </div>
     </main>
 
-    <!-- ✅ Casillero tipo burbuja flotante -->
+    <!-- ✅ Burbuja flotante -->
     <div class="input-container" id="inputContainer">
       <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
       <button id="send" class="send" type="button">Enviar</button>
@@ -256,52 +256,4 @@
 
     function addBubble(text, from = "bot") {
       const div = document.createElement("div");
-      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
-      div.innerText = text;
-      messagesEl.appendChild(div);
-      scrollToEnd();
-      return div;
-    }
-
-    async function sendMessage() {
-      const text = (inputEl.value || "").trim();
-      if (!text) return;
-      addBubble(text, "user");
-      inputEl.value = "";
-      const typingEl = addBubble("Escribiendo...", "bot");
-      try {
-        const res = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, sessionId, history, source: "carta-frontend" })
-        });
-        const data = await res.json();
-        typingEl.remove();
-        addBubble(data.reply || "Sin respuesta.", "bot");
-      } catch {
-        typingEl.remove();
-        addBubble("Error de conexión con el servidor.", "bot");
-      }
-    }
-
-    sendBtn.addEventListener("click", sendMessage);
-    inputEl.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    // ✅ Hace que la burbuja flote sin moverse al abrir el teclado
-    if (window.visualViewport) {
-      const adjustFloating = () => {
-        const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        inputContainer.style.transform = `translate(-50%, -${offset}px)`;
-      };
-      window.visualViewport.addEventListener("resize", adjustFloating);
-      window.visualViewport.addEventListener("scroll", adjustFloating);
-      adjustFloating();
-    }
-  </script>
-</body>
-</html>
+      div.className = `bubble ${from === "user" ? "from-user" :
