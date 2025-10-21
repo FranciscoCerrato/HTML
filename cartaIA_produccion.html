@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Carta IA — Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
   <style>
@@ -40,12 +40,7 @@
       height: 100dvh;
       width: 100%;
       padding: 8px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      overflow: hidden;
     }
 
     .header {
@@ -56,7 +51,6 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
       flex-shrink: 0;
     }
 
@@ -121,7 +115,7 @@
       flex-direction: column;
       gap: 8px;
       scroll-behavior: smooth;
-      padding-bottom: 8px;
+      padding-bottom: 12px;
       position: relative;
       z-index: 1;
     }
@@ -139,7 +133,9 @@
       animation: fadeIn 0.3s ease forwards;
     }
 
-    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .from-user {
       align-self: flex-end;
@@ -155,14 +151,15 @@
       border-bottom-left-radius: 6px;
     }
 
-    .input-row {
+    /* ✅ Casillero visible siempre */
+    .input-container {
+      background: var(--card);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 10px;
-      background: var(--card);
-      border-radius: var(--radius-md);
-      margin-top: 8px;
+      flex-shrink: 0;
       position: fixed;
       bottom: 0;
       left: 0;
@@ -214,11 +211,14 @@
 
     <main class="chat">
       <div id="messages" class="messages">
-        <div class="bubble from-bot">¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.</div>
+        <div class="bubble from-bot">
+          ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
+        </div>
       </div>
     </main>
 
-    <div class="input-row" id="inputRow">
+    <!-- ✅ Casillero fijo y visible -->
+    <div class="input-container" id="inputContainer">
       <input id="prompt" class="prompt" type="text" placeholder="Escribe tu mensaje..." autocomplete="off" />
       <button id="send" class="send" type="button">Enviar</button>
     </div>
@@ -226,13 +226,13 @@
 
   <script>
     const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('prompt');
-    const sendBtn = document.getElementById('send');
-    const inputRow = document.getElementById('inputRow');
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("send");
+    const inputContainer = document.getElementById("inputContainer");
 
     const sessionId = (() => {
-      const key = 'carta_ai_session';
+      const key = "carta_ai_session";
       let v = localStorage.getItem(key);
       if (!v) {
         v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
@@ -247,9 +247,9 @@
       messagesEl.scrollTop = messagesEl.scrollHeight + 100;
     }
 
-    function addBubble(text, from = 'bot', instant = false) {
-      const div = document.createElement('div');
-      div.className = `bubble ${from === 'user' ? 'from-user' : 'from-bot'}`;
+    function addBubble(text, from = "bot") {
+      const div = document.createElement("div");
+      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
       div.innerText = text;
       messagesEl.appendChild(div);
       scrollToEnd();
@@ -259,14 +259,14 @@
     async function sendMessage() {
       const text = (inputEl.value || "").trim();
       if (!text) return;
-      addBubble(text, 'user');
-      inputEl.value = '';
-      const typingEl = addBubble('Escribiendo...', 'bot');
+      addBubble(text, "user");
+      inputEl.value = "";
+      const typingEl = addBubble("Escribiendo...", "bot");
       try {
         const res = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, sessionId, history, source: 'carta-frontend' })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, sessionId, history, source: "carta-frontend" })
         });
         const data = await res.json();
         typingEl.remove();
@@ -277,23 +277,23 @@
       }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    inputEl.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
 
-    // ✅ Mantiene el input fijo sobre el teclado sin mover pantalla
+    // ✅ Ajuste perfecto para que el teclado no empuje la pantalla
     if (window.visualViewport) {
-      const adjustForKeyboard = () => {
+      const adjustInput = () => {
         const bottomOffset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        inputRow.style.bottom = `${bottomOffset}px`;
+        inputContainer.style.transform = `translateY(-${bottomOffset}px)`;
       };
-      window.visualViewport.addEventListener('resize', adjustForKeyboard);
-      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
-      adjustForKeyboard();
+      window.visualViewport.addEventListener("resize", adjustInput);
+      window.visualViewport.addEventListener("scroll", adjustInput);
+      adjustInput();
     }
   </script>
 </body>
