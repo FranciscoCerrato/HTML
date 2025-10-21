@@ -75,7 +75,6 @@
       background: var(--white);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-2);
-      padding: 12px;
       display: flex;
       flex-direction: column;
       flex: 1;
@@ -98,7 +97,7 @@
 
     .madeby {
       position: absolute;
-      bottom: 115px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 12px;
@@ -117,7 +116,8 @@
       flex-direction: column;
       gap: 8px;
       scroll-behavior: smooth;
-      padding-bottom: 80px; /* espacio para el input fijo */
+      padding: 12px;
+      padding-bottom: 0;
       position: relative;
       z-index: 2;
     }
@@ -151,15 +151,13 @@
       border-bottom-left-radius: 6px;
     }
 
-    /* 💬 Input fijo */
+    /* ✅ Input fijo DENTRO del chat */
     .input-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      margin: 8px;
+      margin-top: auto;
       background: var(--white);
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      border-radius: 20px 20px 0 0;
+      border-radius: 20px;
       padding: 10px 14px;
       display: flex;
       align-items: center;
@@ -199,10 +197,6 @@
 
     .send:active { transform: scale(0.96); }
 
-    @media(max-width:600px){
-      .title h1{font-size:16px;}
-      .prompt{font-size:15px;}
-    }
   </style>
 </head>
 <body>
@@ -223,13 +217,14 @@
           ¡Bienvenido 👋! Soy tu asistente de carta. Pregúntame por <b>recomendaciones</b>, <b>alérgenos</b> o <b>tiempos</b> de los platos.
         </div>
       </div>
-      <div class="madeby">Made by Fran</div>
-    </main>
 
-    <div class="input-container" id="inputContainer">
-      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
-      <button id="send" class="send" type="button">Enviar</button>
-    </div>
+      <div class="madeby">Made by Fran</div>
+
+      <div class="input-container" id="inputContainer">
+        <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
+        <button id="send" class="send" type="button">Enviar</button>
+      </div>
+    </main>
   </div>
 
   <script>
