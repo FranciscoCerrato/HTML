@@ -78,7 +78,8 @@
       flex-direction: column;
       flex: 1;
       margin-top: 8px;
-      overflow-y: auto;
+      overflow-y: auto; /* ✅ Scroll principal del chat */
+      padding-bottom: 100px; /* espacio para input */
     }
 
     /* ✅ Marca de agua restaurada */
@@ -112,13 +113,11 @@
     }
 
     .messages {
-      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 8px;
       scroll-behavior: smooth;
       padding: 12px;
-      padding-bottom: 90px;
       position: relative;
       z-index: 2;
     }
@@ -254,7 +253,7 @@ Mojito / Piña colada ............. 7,00 €
     </main>
 
     <div class="input-container" id="inputContainer">
-      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Recomiendame un plato" autocomplete="off" />
+      <input id="prompt" class="prompt" type="text" placeholder="Ejemplo: Muéstrame la carta" autocomplete="off" />
       <button id="send" class="send" type="button">Enviar</button>
     </div>
   </div>
@@ -263,6 +262,10 @@ Mojito / Piña colada ............. 7,00 €
     function toggleMenu() {
       const menu = document.getElementById('menuText');
       menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+      // ✅ Desplazamos hacia el final cuando se muestra
+      if (menu.style.display === 'block') {
+        setTimeout(() => menu.scrollIntoView({ behavior: 'smooth', block: 'end' }), 200);
+      }
     }
 
     const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
