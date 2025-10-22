@@ -99,10 +99,10 @@
       z-index: 0;
     }
 
-    /* ✅ Actualización: Made by SPATULA ya no se superpone */
+    /* ✅ Actualización: Made by SPATULA siempre visible con efecto fade */
     .madeby {
-      position: relative;
-      bottom: 0;
+      position: sticky;
+      bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 12px;
@@ -110,9 +110,11 @@
       opacity: 0.9;
       font-weight: 500;
       text-align: center;
-      z-index: 1;
+      z-index: 2;
       margin-top: 20px;
       pointer-events: none;
+      background: linear-gradient(to top, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0));
+      padding-top: 8px;
     }
 
     .madeby .brand {
@@ -252,7 +254,81 @@
     <main class="chat" id="chat">
       <div id="messages" class="messages">
         <button class="menu-btn" onclick="toggleMenu()">📜 Ver carta</button>
-        <div id="menuText" class="menu-text">…</div>
+        <div id="menuText" class="menu-text">
+🍢 Entrantes
+
+Pan con alioli y aceitunas ............. 2,50 €
+
+Ensalada mixta (lechuga, tomate, cebolla, atún, huevo) ............. 6,00 €
+
+Ensalada de queso de cabra con miel y frutos secos ............. 8,50 €
+
+Gazpacho andaluz ............. 4,00 €
+
+Croquetas caseras de jamón ibérico (6 uds.) ............. 7,50 €
+
+🐟 Pescaito Frito
+
+Boquerones fritos ............. 8,00 €
+
+Calamares a la romana ............. 9,00 €
+
+Puntillitas ............. 9,50 €
+
+Choco frito ............. 10,00 €
+
+Fritura malagueña (para 2 personas) ............. 18,00 €
+
+🍤 A la Brasa
+
+Sardinas en espeto (por ración) ............. 7,00 €
+
+Pulpo a la brasa con pimentón ............. 13,50 €
+
+Dorada o lubina a la espalda ............. 14,00 €
+
+Brocheta de gambones ............. 12,00 €
+
+🍛 Arroces
+
+Paella mixta ............. 13,00 € / persona (mín. 2 personas)
+
+Arroz negro con alioli ............. 14,00 € / persona
+
+Fideuá marinera ............. 12,50 € / persona
+
+🍔 Carnes y Bocadillos
+
+Hamburguesa casera con patatas ............. 9,00 €
+
+Pechuga a la plancha con ensalada ............. 8,50 €
+
+Bocadillo de lomo con queso ............. 6,50 €
+
+Serranito andaluz ............. 7,00 €
+
+🍰 Postres
+
+Tarta de queso con mermelada de arándanos ............. 4,50 €
+
+Helados variados ............. 3,00 €
+
+Fruta fresca de temporada ............. 3,50 €
+
+🍹 Bebidas
+
+Agua mineral ............. 1,50 €
+
+Refrescos ............. 2,00 €
+
+Cerveza caña ............. 2,50 €
+
+Tinto de verano ............. 3,00 €
+
+Copa de vino blanco / rosado ............. 3,50 €
+
+Mojito / Piña colada ............. 7,00 €
+        </div>
       </div>
       <div class="madeby">Made by <span class="brand">SPATULA</span></div>
     </main>
@@ -264,7 +340,80 @@
   </div>
 
   <script>
-    // Resto del código (sin cambios)
+    // ✅ scroll automático en el menú
+    function toggleMenu() {
+      const menu = document.getElementById('menuText');
+      const messages = document.getElementById('messages');
+      const isHidden = menu.style.display === 'none' || menu.style.display === '';
+      menu.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        setTimeout(() => {
+          messages.scrollTo({
+            top: messages.scrollHeight,
+            behavior: "smooth"
+          });
+        }, 200);
+      }
+    }
+
+    const WEBHOOK_URL = "https://n8n-n8n.dts4ar.easypanel.host/webhook/ee0f7c53-8930-4d88-a062-f50d6b459861";
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("send");
+
+    const sessionId = (() => {
+      const key = "carta_ai_session";
+      let v = localStorage.getItem(key);
+      if (!v) {
+        v = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+        localStorage.setItem(key, v);
+      }
+      return v;
+    })();
+
+    const history = [];
+    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
+
+    function addBubble(text, from = "bot") {
+      const div = document.createElement("div");
+      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
+      div.innerText = text;
+      messagesEl.appendChild(div);
+      scrollToEnd();
+      return div;
+    }
+
+    async function sendMessage() {
+      const text = (inputEl.value || "").trim();
+      if (!text) return;
+      addBubble(text, "user");
+      inputEl.value = "";
+      const typingEl = addBubble("Escribiendo...", "bot");
+
+      try {
+        const payload = { message: text, sessionId, history, source: "carta-frontend" };
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
+          body: JSON.stringify(payload)
+        });
+
+        const rawText = await res.text();
+        let replyText = rawText;
+        try { const data = JSON.parse(rawText); replyText = data.reply || data.text || data.data || JSON.stringify(data); } catch {}
+        typingEl.remove();
+        addBubble(replyText || "Sin respuesta del servidor.", "bot");
+      } catch (err) {
+        typingEl.remove();
+        addBubble("Error de conexión con el servidor.", "bot");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
   </script>
 </body>
 </html>
