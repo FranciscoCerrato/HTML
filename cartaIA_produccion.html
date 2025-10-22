@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Carta IA — Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+  <!-- Fuente corporativa SPATULA -->
+  <link href="https://fonts.googleapis.com/css2?family=Chela+One&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-top: #ffffff;
@@ -109,6 +111,14 @@
       text-align: center;
       z-index: 1;
       pointer-events: none;
+    }
+
+    .madeby .brand {
+      font-family: 'Chela One', cursive;
+      color: #00D77B;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
     }
 
     .messages {
@@ -316,36 +326,7 @@ Copa de vino blanco / rosado ............. 3,50 €
 Mojito / Piña colada ............. 7,00 €
         </div>
       </div>
-      <!-- Firma personalizada -->
-<div class="signature">
-  Made by 
-  <span class="brand">SPATULA</span>
-</div>
-
-<!-- Fuente corporativa -->
-<link href="https://fonts.googleapis.com/css2?family=Chela+One&display=swap" rel="stylesheet">
-
-<!-- Estilos -->
-<style>
-  .signature {
-    position: absolute;
-    bottom: 12px; /* cambia a top si lo prefieres arriba */
-    right: 16px;
-    font-size: 14px;
-    color: #555555;
-    font-family: 'Poppins', sans-serif;
-    user-select: none;
-  }
-
-  .signature .brand {
-    font-family: 'Chela One', cursive;
-    color: #00D77B;
-    font-size: 18px;
-    margin-left: 4px;
-    letter-spacing: 1px;
-  }
-</style>
-
+      <div class="madeby">Made by <span class="brand">SPATULA</span></div>
     </main>
 
     <div class="input-container" id="inputContainer">
