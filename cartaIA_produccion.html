@@ -80,8 +80,7 @@
       flex-direction: column;
       flex: 1;
       margin-top: 8px;
-      overflow-y: auto;
-      padding-bottom: 100px;
+      overflow: hidden; /* ← Cambiado para contener el scroll dentro de messages */
     }
 
     .chat::before {
@@ -99,23 +98,22 @@
       z-index: 0;
     }
 
-    /* ✅ CORREGIDO: perfectamente centrado y visible */
+    /* ✅ Mantiene posición visual, pero ahora tiene su propio espacio */
+    .footer {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 10px 0 80px 0; /* espacio antes del input-container */
+      background: linear-gradient(to top, rgba(255,255,255,1) 60%, rgba(255,255,255,0));
+    }
+
     .madeby {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
       font-size: 12px;
       color: #444;
       opacity: 0.9;
       font-weight: 500;
       text-align: center;
-      z-index: 1;
       pointer-events: none;
-      width: fit-content;
-      background: linear-gradient(to top, rgba(255,255,255,1) 60%, rgba(255,255,255,0));
-      padding: 6px 12px;
-      border-radius: 8px;
+      width: 100%;
     }
 
     .madeby .brand {
@@ -132,7 +130,8 @@
       gap: 8px;
       scroll-behavior: smooth;
       padding: 12px;
-      position: relative;
+      overflow-y: auto; /* ✅ Scroll aquí */
+      flex: 1;
       z-index: 2;
     }
 
@@ -259,79 +258,13 @@
 🍢 Entrantes
 
 Pan con alioli y aceitunas ............. 2,50 €
-
-Ensalada mixta (lechuga, tomate, cebolla, atún, huevo) ............. 6,00 €
-
-Ensalada de queso de cabra con miel y frutos secos ............. 8,50 €
-
-Gazpacho andaluz ............. 4,00 €
-
-Croquetas caseras de jamón ibérico (6 uds.) ............. 7,50 €
-
-🐟 Pescaito Frito
-
-Boquerones fritos ............. 8,00 €
-
-Calamares a la romana ............. 9,00 €
-
-Puntillitas ............. 9,50 €
-
-Choco frito ............. 10,00 €
-
-Fritura malagueña (para 2 personas) ............. 18,00 €
-
-🍤 A la Brasa
-
-Sardinas en espeto (por ración) ............. 7,00 €
-
-Pulpo a la brasa con pimentón ............. 13,50 €
-
-Dorada o lubina a la espalda ............. 14,00 €
-
-Brocheta de gambones ............. 12,00 €
-
-🍛 Arroces
-
-Paella mixta ............. 13,00 € / persona (mín. 2 personas)
-
-Arroz negro con alioli ............. 14,00 € / persona
-
-Fideuá marinera ............. 12,50 € / persona
-
-🍔 Carnes y Bocadillos
-
-Hamburguesa casera con patatas ............. 9,00 €
-
-Pechuga a la plancha con ensalada ............. 8,50 €
-
-Bocadillo de lomo con queso ............. 6,50 €
-
-Serranito andaluz ............. 7,00 €
-
-🍰 Postres
-
-Tarta de queso con mermelada de arándanos ............. 4,50 €
-
-Helados variados ............. 3,00 €
-
-Fruta fresca de temporada ............. 3,50 €
-
-🍹 Bebidas
-
-Agua mineral ............. 1,50 €
-
-Refrescos ............. 2,00 €
-
-Cerveza caña ............. 2,50 €
-
-Tinto de verano ............. 3,00 €
-
-Copa de vino blanco / rosado ............. 3,50 €
-
-Mojito / Piña colada ............. 7,00 €
         </div>
       </div>
-      <div class="madeby">Made by <span class="brand">SPATULA</span></div>
+
+      <!-- ✅ Nuevo contenedor reservado -->
+      <div class="footer">
+        <div class="madeby">Made by <span class="brand">SPATULA</span></div>
+      </div>
     </main>
 
     <div class="input-container" id="inputContainer">
@@ -372,7 +305,14 @@ Mojito / Piña colada ............. 7,00 €
     })();
 
     const history = [];
-    function scrollToEnd() { messagesEl.scrollTop = messagesEl.scrollHeight + 100; }
+    function scrollToEnd() {
+      setTimeout(() => {
+        messagesEl.scrollTo({
+          top: messagesEl.scrollHeight,
+          behavior: "smooth"
+        });
+      }, 100);
+    }
 
     function addBubble(text, from = "bot") {
       const div = document.createElement("div");
