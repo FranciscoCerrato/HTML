@@ -388,29 +388,33 @@ Mojito / Piña colada ............. 7,00 €
       }, 100);
     }
 
-    function addBubble(text, from = "bot", typingEffect = false) {
-      const div = document.createElement("div");
-      div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
-      messagesEl.appendChild(div);
-      scrollToEnd();
+function addBubble(text, from = "bot", typingEffect = false) {
+  const div = document.createElement("div");
+  div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
+  div.style.whiteSpace = "pre-line"; // 🔥 mantiene saltos de línea y espacios
+  messagesEl.appendChild(div);
+  scrollToEnd();
 
-      if (typingEffect && from === "bot") {
-        let i = 0;
-        const speed = 25; // velocidad de escritura
-        function typeChar() {
-          if (i < text.length) {
-            div.innerText += text.charAt(i);
-            i++;
-            scrollToEnd();
-            setTimeout(typeChar, speed);
-          }
-        }
-        typeChar();
-      } else {
-        div.innerText = text;
+  if (typingEffect && from === "bot") {
+    let i = 0;
+    const speed = 25; // velocidad del efecto (ms por carácter)
+
+    function typeChar() {
+      if (i < text.length) {
+        div.textContent += text.charAt(i);
+        i++;
+        scrollToEnd();
+        setTimeout(typeChar, speed);
       }
-      return div;
     }
+
+    typeChar();
+  } else {
+    div.textContent = text;
+  }
+
+  return div;
+}
 
     async function sendMessage() {
       const text = (inputEl.value || "").trim();
