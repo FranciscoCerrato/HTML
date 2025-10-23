@@ -80,7 +80,7 @@
       flex-direction: column;
       flex: 1;
       margin-top: 8px;
-      overflow: hidden; /* ← Cambiado para contener el scroll dentro de messages */
+      overflow: hidden;
     }
 
     .chat::before {
@@ -98,11 +98,10 @@
       z-index: 0;
     }
 
-    /* ✅ Mantiene posición visual, pero ahora tiene su propio espacio */
     .footer {
       flex-shrink: 0;
       text-align: center;
-      padding: 10px 0 80px 0; /* espacio antes del input-container */
+      padding: 10px 0 80px 0;
       background: linear-gradient(to top, rgba(255,255,255,1) 60%, rgba(255,255,255,0));
     }
 
@@ -130,7 +129,7 @@
       gap: 8px;
       scroll-behavior: smooth;
       padding: 12px;
-      overflow-y: auto; /* ✅ Scroll aquí */
+      overflow-y: auto;
       flex: 1;
       z-index: 2;
     }
@@ -267,6 +266,7 @@ Gazpacho andaluz ............. 4,00 €
 
 Croquetas caseras de jamón ibérico (6 uds.) ............. 7,50 €
 
+
 🐟 Pescaito Frito
 
 Boquerones fritos ............. 8,00 €
@@ -279,6 +279,7 @@ Choco frito ............. 10,00 €
 
 Fritura malagueña (para 2 personas) ............. 18,00 €
 
+
 🍤 A la Brasa
 
 Sardinas en espeto (por ración) ............. 7,00 €
@@ -289,6 +290,7 @@ Dorada o lubina a la espalda ............. 14,00 €
 
 Brocheta de gambones ............. 12,00 €
 
+
 🍛 Arroces
 
 Paella mixta ............. 13,00 € / persona (mín. 2 personas)
@@ -296,6 +298,7 @@ Paella mixta ............. 13,00 € / persona (mín. 2 personas)
 Arroz negro con alioli ............. 14,00 € / persona
 
 Fideuá marinera ............. 12,50 € / persona
+
 
 🍔 Carnes y Bocadillos
 
@@ -307,6 +310,7 @@ Bocadillo de lomo con queso ............. 6,50 €
 
 Serranito andaluz ............. 7,00 €
 
+
 🍰 Postres
 
 Tarta de queso con mermelada de arándanos ............. 4,50 €
@@ -314,6 +318,7 @@ Tarta de queso con mermelada de arándanos ............. 4,50 €
 Helados variados ............. 3,00 €
 
 Fruta fresca de temporada ............. 3,50 €
+
 
 🍹 Bebidas
 
@@ -331,7 +336,6 @@ Mojito / Piña colada ............. 7,00 €
         </div>
       </div>
 
-      <!-- ✅ Nuevo contenedor reservado -->
       <div class="footer">
         <div class="madeby">Made by <span class="brand">SPATULA</span></div>
       </div>
@@ -384,12 +388,27 @@ Mojito / Piña colada ............. 7,00 €
       }, 100);
     }
 
-    function addBubble(text, from = "bot") {
+    function addBubble(text, from = "bot", typingEffect = false) {
       const div = document.createElement("div");
       div.className = `bubble ${from === "user" ? "from-user" : "from-bot"}`;
-      div.innerText = text;
       messagesEl.appendChild(div);
       scrollToEnd();
+
+      if (typingEffect && from === "bot") {
+        let i = 0;
+        const speed = 25; // velocidad de escritura
+        function typeChar() {
+          if (i < text.length) {
+            div.innerText += text.charAt(i);
+            i++;
+            scrollToEnd();
+            setTimeout(typeChar, speed);
+          }
+        }
+        typeChar();
+      } else {
+        div.innerText = text;
+      }
       return div;
     }
 
@@ -413,7 +432,10 @@ Mojito / Piña colada ............. 7,00 €
         let replyText = rawText;
         try { const data = JSON.parse(rawText); replyText = data.reply || data.text || data.data || JSON.stringify(data); } catch {}
         typingEl.remove();
-        addBubble(replyText || "Sin respuesta del servidor.", "bot");
+
+        // 💬 Respuesta con efecto typing
+        addBubble(replyText || "Sin respuesta del servidor.", "bot", true);
+
       } catch (err) {
         typingEl.remove();
         addBubble("Error de conexión con el servidor.", "bot");
