@@ -397,7 +397,7 @@ function addBubble(text, from = "bot", typingEffect = false) {
 
   if (typingEffect && from === "bot") {
     let i = 0;
-    const speed = 5; // velocidad del efecto (ms por carácter)
+    const speed = 15; // velocidad del efecto (ms por carácter)
 
     function typeChar() {
       if (i < text.length) {
